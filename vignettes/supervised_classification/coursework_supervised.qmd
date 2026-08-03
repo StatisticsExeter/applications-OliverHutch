@@ -1,16 +1,11 @@
 ---
-title: "Building a classifier to predicting house age"
-author: "Anonymous"
+title: "Building a classifier to predict house age"
+author: "Oliver Hutchinson"
 format: 
   html:
     embed-resources: true
 
 ---
-
-## Your task
-
-This material is provided as context to the problem. You should rewrite it as you see fit.
-
 ## The Problem
 
 Data on [Energy Certificates](https://epc.opendatacommunities.org/) were downloaded in March 2025. These certificates are a non-random sample of UK housing, and contain information such as:
@@ -20,7 +15,7 @@ Data on [Energy Certificates](https://epc.opendatacommunities.org/) were downloa
 - Energy costs: Potential costs for heating and lighting the property are provided.
 - Improvement recommendations: Each EPC lists cost-effective ways to improve the building's energy performance.
 
-In all, there are 93 variables available on a wide range of metrics. The full dataset is in the course database server at `10.121.4.250` in `energy.energy_certificates`
+In all, 93 variables are available across a wide range of energy and property metrics. For this analysis, a subset of seven energy-related variables was extracted from the course database.
 
 The data have been used for various published supervised classification exercises:
 
@@ -29,21 +24,19 @@ The data have been used for various published supervised classification exercise
 - Identifying priorities for retrofit strategy <https://uwlpress.uwl.ac.uk/newvistas/article/id/299/>
 - EPC prediction <https://github.com/yourunclefrankie/Energy-efficiency-prediction>
 
-In reducing the carbon footprint of UK housing, it is important to develop a strategy that offers the right solutions to the right properties. It is widely believed that houses build before 1930 require very different approaches to houses built after that period.  In this task, you are required to determine whether it is possible to determine the age of a house based on several recorded energy metrics. These are `current_energy_efficiency`, `environment_impact_current`, `energy_consumption_current`, `co2_emissions_current`, `lighting_cost_current`, `heating_cost_current`, `hot_water_cost_current`.  You have data for all certificates issued in a single local authority area.  This would help the local authority identify the right targets just using metrics rather than requiring a visit to the property to determine its age.
+In reducing the carbon footprint of UK housing, it is important to develop a strategy that offers the right solutions to the right properties. It is widely believed that houses built before 1930 require very different approaches to houses built after that period.  In this task, you are required to determine whether it is possible to determine the age of a house based on several recorded energy metrics. These are `current_energy_efficiency`, `environment_impact_current`, `energy_consumption_current`, `co2_emissions_current`, `lighting_cost_current`, `heating_cost_current`, `hot_water_cost_current`.  You have data for all certificates issued in a single local authority area.  This would help the local authority identify the right targets just using metrics rather than requiring a visit to the property to determine its age.
 
 
 
 
 ## The Data
 
-A very simple preview of the data is given below:
+The class frequencies and grouped summary statistics are presented below.
 
 ```{python}
 #| echo: false
 import pandas as pd
 ```
-
-And a clumsy presentation of some group summary statistics:
 
 
 ```{python}
@@ -62,14 +55,18 @@ df = pd.read_csv('../../data_cache/vignettes/supervised_classification/grouped_s
 print(df.round(3).to_markdown(index=False))
 ```
 
-It is always useful to view a scatterplot of the data, marking the two known groups
+The dataset contains 66,987 properties: 36,523 classified as pre-1930 and 30,464 as post-1930. Pre-1930 properties generally have poorer energy performance. Their mean current energy-efficiency rating is 51.7, compared with 63.6 for post-1930 properties, while their mean environmental-impact rating is also lower at 47.3 compared with 60.5.
 
+Older properties also have higher average energy consumption, carbon emissions and heating costs. Mean heating cost is approximately £1,303 for pre-1930 properties, compared with £831 for post-1930 properties. However, lighting and hot-water costs are relatively similar between the groups. These differences suggest that the selected energy variables contain useful information for predicting whether a property was built before 1930.
+
+
+The scatterplot below shows the relationships between the energy variables, with the two known age groups marked separately.
 
 ![](../../data_cache/vignettes/supervised_classification/scatterplot.html){width="100%" height="600px"}
 
 
 
-For more marks, you may wish to extend this EDA section slightly.  We can extract the performance metrics from fitting such models:
+The scatterplot shows considerable overlap between the two age groups, meaning that no individual energy variable provides a perfect separation. However, the combined differences across efficiency, environmental impact, consumption, emissions and heating costs suggest that classification using several variables may still be effective.
 
 
 ## Fitting LDA and QDA classifiers
@@ -95,7 +92,11 @@ df.rename(columns={"Unnamed: 0": "Category"}, inplace=True)
 print(df.round(3).to_markdown(index=False))
 ```
 
-You should comment on these results. You may wish to add an interpretation of the coefficients of these classifiers.  Or there may be other metrics (confusion matrix) that you think should be presented.
+LDA performs better overall than QDA. LDA achieves an accuracy of 0.738 and a weighted F1-score of 0.737. Its performance is reasonably balanced across the two classes, with recall values of 0.682 for post-1930 properties and 0.784 for pre-1930 properties.
+
+QDA achieves a lower accuracy of 0.626 and a weighted F1-score of 0.608. Its predictions are also less balanced. Although it identifies 88.5% of post-1930 properties, it identifies only 41.2% of pre-1930 properties. Therefore, QDA frequently classifies older properties as post-1930.
+
+These results indicate that the simpler linear decision boundary used by LDA is more suitable for this dataset than the more flexible quadratic boundary used by QDA.
 
 
 ## ROC curve (and AUC) for two simple classifiers
@@ -106,26 +107,15 @@ We can of course examine the AUC for these classifiers.
 ![](../../data_cache/vignettes/supervised_classification/roc.html){width="100%" height="600px"}
 
 
-You should comment on the performance of the classifier.
+Both ROC curves lie clearly above the diagonal random-classification line, showing that both models have useful discriminatory ability. LDA has an AUC of 0.81, compared with 0.79 for QDA. This supports the earlier performance metrics and indicates that LDA is slightly better at distinguishing between pre-1930 and post-1930 properties across different classification thresholds.
 
-##  Additional credit
+Overall, the selected energy metrics provide a useful indication of whether a property was built before 1930. However, the LDA accuracy of approximately 74% means that around one quarter of properties are still misclassified. The model could therefore support initial targeting by a local authority, but it should not replace definitive property records or an inspection when an accurate age classification is required.
 
-For additional credit you should consider extended the pipeline and trying out other classifiers.
 
 
 ## Record of AI use for MTHM503 supervised coursework
 
-Instructions: You can use this document to record when, how and why you used GenAI to complete your assessment. It will help you create a record of AI use to submit alongside your references for AI-integrated and AI-assisted assignments. It may also be useful to help you discuss your AI use if you are required to do so in an academic conduct meeting.
 
-| **Date**       | **AI tool used** | **Purpose**                                | **Prompt**                                 | **Hyperlink to output (where possible)** | **Section of work used for** |
-|----------------|------------------|--------------------------------------------|--------------------------------------------|------------------------------------------|-------------------------------|
-| E.g. 15/07/2025| MS Copilot       | To help create an organised essay structure| ‘Generate ideas for structuring an essay on...’ | [insert link]                          | introduction                  |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-
+| **Date** | **AI tool used** | **Purpose** | **Prompt** | **Hyperlink to output (where possible)** | **Section of work used for** |
+|---|---|---|---|---|---|
+| 27/07/2026 | ChatGPT | Troubleshooting technical issues with the database connection, report pipeline, missing generated files and Quarto rendering | Asked for step-by-step help diagnosing database timeouts, finding the renviron details, locating missing CSV files and possible fixes | No public hyperlink available | Technical troubleshooting and report preparation |

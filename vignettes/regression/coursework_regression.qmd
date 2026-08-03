@@ -1,18 +1,12 @@
 ---
-title: "Understanding costs"
-author: "Anonymous"
+title: "Modelling carbon emissions shortfall across local authorities"
+author: "Oliver Hutchinson"
 format: 
   html:
     embed-resources: true
     math: mathjax
 
 ---
-
-
-
-## Your task
-
-This material is provided as context to the problem. You should rewrite it as you see fit.
 
 ## The Problem
 
@@ -23,21 +17,25 @@ Data on [Energy Certificates](https://epc.opendatacommunities.org/) were downloa
 - Energy costs: Potential costs for heating and lighting the property are provided.
 - Improvement recommendations: Each EPC lists cost-effective ways to improve the building's energy performance.
 
-We have been asked by a local company to determine whether some local authorities are better than others in terms of reducing the carbon footprint of properties in their area.  However, some authorities have older housing stock which is innately has a larger carbon footprint. Likewise, some have larger properties than others.  The initial brief is to carry out an aggregate data analysis where the unit of analysis is a local authority.  We have been asked to consider the average carbon footprint of a house in a given area conditional on being pre- or post-1930 and having between 1 and 10 heated rooms.  This should let you fit a model which has fixed effects for the number of houses of pre-1930, post-1930 and 1, 2, 3, ..., 10 heated rooms
+We have been asked to compare local authorities in terms of carbon-emissions shortfall. A direct comparison of authority averages would be unfair because authorities differ in their housing stock. In particular, older and larger properties may naturally have higher emissions shortfalls.
+
+The analysis therefore considers mean shortfall for combinations of property age and number of heated rooms within each local authority. A linear mixed-effects model is used:
+
+$$
+Y_{ij} = \beta_0 + \beta_1 I(\text{age}_{ij}=\text{Recent}) + \beta_2\text{rooms}_{ij} + u_j + \varepsilon_{ij}
+$$
+
+where:
+
+- $Y_{ij}$ is the mean carbon-emissions shortfall for housing category $i$ in local authority $j$;
+- $I(\text{age}_{ij}=\text{Recent})$ indicates whether the properties are classified as recent rather than old;
+- $\text{rooms}_{ij}$ is the number of heated rooms;
+- $\beta_0$, $\beta_1$ and $\beta_2$ are fixed effects;
+- $u_j$ is the random intercept for local authority $j$;
+- $\varepsilon_{ij}$ is the remaining observation-level error.
 
 
-$$Y_{ji} = \beta_0 + \beta_1 x_{j}^{(\text{old})} + \sum_{r=1}^{10} \beta_r x_{j}^{(r)} + \gamma_j$$
-
-Where 
-
-- $Y_{ji}$ is the average carbon dioxide emissions for authority $j$ for each house type $i$ (old/new, 1, 2, ..., 10 rooms)
-- $x_{j}^{(old)}$ is the number of houses that are older than 1930 in authority $j$
-- $x_{j}^r$ are the number of houses with $r=1, 2, ..., 10$ rooms in authority $j$ 
-- $\beta_0$, $\beta_1$, $\beta_r$ are the fixed effects
-- $\gamma_j$ is the random effect for local authority $j$
-
-
-
+This analysis uses a linear mixed-effects model to compare local authorities while accounting for differences in their housing stock. Property age and the number of heated rooms are included as fixed effects because these characteristics are expected to affect emissions shortfall systematically. Local authority is included as a random intercept, allowing each authority to have its own adjusted average shortfall after accounting for age and property size.
 
 ## The Data
 
@@ -48,6 +46,10 @@ Some initial exploratory data analysis shows us how the carbon emissions vary by
 ![](../../data_cache/vignettes/regression/boxplot_age.html){width="100%" height="600px"}
 
 ![](../../data_cache/vignettes/regression/boxplot_rooms.html){width="100%" height="600px"}
+
+The age-category boxplot shows that old properties generally have a higher shortfall than recent properties. Old properties also have a wider distribution and more extreme high values, suggesting greater variation among the older housing stock.
+
+Shortfall generally increases as the number of heated rooms increases. The increase is especially noticeable among properties with six or more rooms, and the spread also becomes wider for larger properties. These patterns support including property age and number of rooms in the model. However, the increasing variability for larger properties suggests that the constant-variance assumption may not hold perfectly.
 
 
 ## The model
@@ -64,31 +66,36 @@ with open('../../data_cache/vignettes/regression/model_fit.txt') as f:
     print(content)
 ```
 
+The model converged successfully using 6,917 observations from 346 local authorities. Both fixed-effect predictors are strongly associated with shortfall.
+
+After controlling for the number of rooms and local-authority differences, recent properties have an estimated shortfall 2.981 units lower than old properties. The 95% confidence interval is from -3.071 to -2.892, and the effect is statistically significant with \(p < 0.001\).
+
+Each additional heated room is associated with an estimated increase of 1.054 shortfall units, after controlling for property age and local authority. Its 95% confidence interval is from 1.039 to 1.070, and this effect is also statistically significant with \(p < 0.001\).
+
+The intercept of 2.409 represents the predicted shortfall for an old property with zero heated rooms in an average local authority. Because the observed properties have between one and ten rooms, the intercept has limited practical meaning by itself.
+
+The estimated local-authority variance is 0.434, corresponding to a random-intercept standard deviation of approximately 0.659. Compared with the residual variance of 3.588, this indicates that roughly 11% of the remaining variation is associated with differences between local authorities.
 
 ## The key insight
 
-We've been asked to rate local authority performance, so the most important result is a ``caterpillar plot'' of the random effects.
-
+The random intercept for each local authority represents its estimated deviation from the overall expected shortfall after adjusting for property age and number of rooms. A positive random effect means that an authority has a higher shortfall than predicted from its housing stock, whereas a negative random effect means that it has a lower shortfall than predicted.
 
 ![](../../data_cache/vignettes/regression/caterpillar.html){width="100%" height="600px"}
 
-##  Additional credit
+The caterpillar plot ranks the local-authority random effects and displays their uncertainty. Authorities toward the right of zero have higher adjusted shortfalls, while those toward the left have lower adjusted shortfalls. Authorities whose plotted intervals do not cross zero provide the clearest evidence of differing from the overall average. Most intervals overlap zero, so many apparent differences between authorities remain uncertain.
 
-For additional credit you might like to enhance the exploratory data analysis. You could consider residual diagnostics to check the validity of the model fit. You may also like to consider the appropriateness of the adjusting variables age and number of rooms. You could consider extracting further variables from the database and fitting a slightly more elaborate model.
+These adjusted results provide a fairer comparison than raw authority averages because they account for important differences in property age and size. Nevertheless, the random effects describe associations in these data and should not automatically be interpreted as causal evidence that an authority's policies produced the difference.
 
+## Model assumptions and limitations
 
-## Record of AI use for MTHM503 Regression coursework
+The mixed model assumes a linear relationship between the number of rooms and shortfall, approximately normally distributed residuals, constant residual variance, and approximately normally distributed local-authority random effects. It also assumes that observations are independent after conditioning on the authority-level random effect.
 
-Instructions: You can use this document to record when, how and why you used GenAI to complete your assessment. It will help you create a record of AI use to submit alongside your references for AI-integrated and AI-assisted assignments. It may also be useful to help you discuss your AI use if you are required to do so in an academic conduct meeting.
+The exploratory boxplots show a broadly increasing relationship between room count and shortfall, supporting the inclusion of a room-count effect. However, the relationship may become steeper and more variable for properties with many rooms. This suggests possible non-linearity and unequal residual variance. Formal residual-versus-fitted and quantile-quantile plots are not included in the current pipeline, so the normality and constant-variance assumptions cannot be confirmed from this report. The coefficient estimates should therefore be interpreted with appropriate caution.
 
-| **Date**       | **AI tool used** | **Purpose**                                | **Prompt**                                 | **Hyperlink to output (where possible)** | **Section of work used for** |
-|----------------|------------------|--------------------------------------------|--------------------------------------------|------------------------------------------|-------------------------------|
-| E.g. 15/07/2025| MS Copilot       | To help create an organised essay structure| ‘Generate ideas for structuring an essay on...’ | [insert link]                          | introduction                  |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
+The dataset is also a non-random sample of properties with Energy Performance Certificates. Results may not generalise perfectly to properties without certificates, and relevant differences between authorities may remain after adjusting only for age and number of rooms.
+
+## Conclusion
+
+Property age and size are both strongly associated with carbon-emissions shortfall. Recent properties have an estimated shortfall approximately 2.98 units lower than old properties, while each additional heated room is associated with an increase of approximately 1.05 units.
+
+Differences between local authorities remain after adjusting for these housing characteristics, although the authority-level variation is smaller than the remaining within-authority variation. The model therefore provides a more appropriate basis for comparing authorities than unadjusted averages, but the results should be interpreted as associations rather than direct evidence of authority performance or policy effectiveness.

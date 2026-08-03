@@ -1,16 +1,11 @@
 ---
 title: "Clustering local authorities by road collision patterns"
-author: "Anonymous"
+author: "Oliver Hutchinson"
 format: 
   html:
     embed-resources: true
 
 ---
-
-## Your task
-
-This material is provided as context to the problem. You should rewrite it as you see fit.  IN particular, you should demonstrate you understand why we are undertaking a cluster analysis, and what the various methods are telling us.  In particular, you should explain how principal components helps us visualise the results of the clustering.
-
 
 ## The Problem
 
@@ -47,79 +42,53 @@ These tables are linked via a unique accident index.
 
 We are interested in creating clusters of like authorities based on the kinds of collisions that occur in their area.  You have been given a count of the number of collisions at Mini-roundabout, in the Rain, in the Dark, when the road is Dry, in an urban setting and where the most seriously injured casualty was reported as having a slight injury.
 
+
 Some previous cluster analysis work has been reported at:
 
 - [ Cluster analysis](https://ijirt.org/publishedpaper/IJIRT175966_PAPER.pdf)
 - [More cluster analysis](https://www.researchgate.net/publication/357727987_Identification_of_Traffic_Accident_Patterns_via_Cluster_Analysis_and_Test_Scenario_Development_for_Autonomous_Vehicles/fulltext/61dcdc17034dda1b9eebd63d/Identification-of-Traffic-Accident-Patterns-via-Cluster-Analysis-and-Test-Scenario-Development-for-Autonomous-Vehicles.pdf)
 
+This analysis uses unsupervised learning to identify groups of local authorities with similar road-collision profiles. Unlike supervised classification, there is no known outcome label. Instead, hierarchical clustering and k-means clustering are used to discover structure based on the total number of collisions and the proportions occurring at mini-roundabouts, in rain, in darkness, on dry roads, in urban areas and involving slight injuries.
 
 ## The Data
 
-The first thing we can do is consider a scatterplot of the data
+The scatterplot below shows the distributions and relationships between the collision variables for each local authority.
 
 ![](../../data_cache/vignettes/unsupervised_classification/scatterplot.html){width="100%" height="600px"}
 
-We are going to use the proportion of each subtype of collision that was reported, and rescale the variables.
+The scatterplot shows substantial variation between local authorities, particularly in the total number of collisions and the proportion occurring in urban areas. Some variables are related, but there are no completely separate groups visible from the raw plots alone.
 
+The variables are therefore standardised before clustering. This places them on comparable scales and prevents the total collision count, which is measured in much larger numerical units than the proportions, from dominating the distance calculations.
 
 ## Hierarchical clustering
 
-
-The first task is to perform hierarchical clustering.
+Ward hierarchical clustering was applied to the standardised variables. The dendrogram displays how local authorities are progressively joined according to their similarity.
 
 ![](../../data_cache/vignettes/unsupervised_classification/dendrogram.html){width="100%" height="600px"}
 
+The larger increases in linkage distance near the top of the dendrogram suggest that a four-cluster solution provides a useful summary without dividing the authorities into many very small groups.
 
-You need to select a suitable ``cut-point'' and cut the tree at an appropriate height to form a number of clusters.
+Principal component analysis (PCA) is used to visualise the clustering results. PCA transforms the original correlated variables into new, uncorrelated components. The first principal component captures the greatest possible amount of variation, while the second captures the greatest remaining variation. Plotting these two components provides a two-dimensional summary of the main differences between local authorities.
 
-To aid visualisation of results, you should plot the cluster membership on a scatterplot of the first two principal components.
+![](../../data_cache/vignettes/unsupervised_classification/hscatter.html){width="100%" height="600px"}
 
+The PCA plot shows four reasonably distinct regions, although there is some overlap near the centre. One group lies mainly at high positive PC1 values, another is concentrated at negative PC1 values, and another appears lower on PC2. A small number of authorities are far from the main concentration of points and may represent unusual collision profiles. The plot therefore suggests meaningful cluster structure, although the groups are not perfectly separated.
 
-![](../../data_cache/vignettes/unsupervised_classification/kscatter.html){width="100%" height="600px"}
+## k-means clustering
 
-
-## kmeans clustering
-
-
-The second task is to perform k-means clustering. You should select an appropriate number of clusters.
-First, you should look at the cluster centroids:
-
+A four-cluster k-means solution was selected so that it could be compared directly with the four groups obtained from hierarchical clustering.
 
 ![](../../data_cache/vignettes/unsupervised_classification/kcentroids1.html){width="100%" height="600px"}
 
+The first centroid plot shows that Cluster 3 has by far the highest average total number of collisions, at approximately 1,600. Clusters 1 and 2 have moderate average collision totals, while Cluster 0 has the lowest average total.
 
 ![](../../data_cache/vignettes/unsupervised_classification/kcentroids2.html){width="100%" height="600px"}
 
+The proportional centroid plot provides more information about the collision profiles. Cluster 3 has the highest proportions of urban collisions and slight injuries, suggesting that it represents large and highly urban authorities. Cluster 1 also has relatively high proportions of urban, dry-road and slight-injury collisions.
 
-As before you should plot the cluster membership on a scatterplot of the first two principal components.
+Cluster 2 has a similar average collision total to Cluster 1 but a much lower urban proportion, suggesting a less urban or more rural collision profile. Cluster 0 has the lowest average collision total, the highest proportion of collisions occurring in rain, and comparatively low proportions of urban, dry-road and slight-injury collisions.
 
 ![](../../data_cache/vignettes/unsupervised_classification/kscatter.html){width="100%" height="600px"}
 
-
-
-
-
-##  Additional credit
-
-For additional credit you should consider adding a further unsupervised classification method. Alternatively, you could increase the number of variables used in the clustering.
-
-
-
-## Record of AI use for MTHM503 unsupervised coursework
-
-Instructions: You can use this document to record when, how and why you used GenAI to complete your assessment. It will help you create a record of AI use to submit alongside your references for AI-integrated and AI-assisted assignments. It may also be useful to help you discuss your AI use if you are required to do so in an academic conduct meeting.
-
-| **Date**       | **AI tool used** | **Purpose**                                | **Prompt**                                 | **Hyperlink to output (where possible)** | **Section of work used for** |
-|----------------|------------------|--------------------------------------------|--------------------------------------------|------------------------------------------|-------------------------------|
-| E.g. 15/07/2025| MS Copilot       | To help create an organised essay structure| ‘Generate ideas for structuring an essay on...’ | [insert link]                          | introduction                  |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-|                |                  |                                            |                                            |                                          |                               |
-
-
+The k-means PCA plot is very similar to the hierarchical-clustering PCA plot. This indicates that the two clustering methods have identified broadly consistent structure in the data. Some overlap remains between groups near the centre, so the clusters should be treated as useful summaries rather than completely separate and definitive types of local authority.
 

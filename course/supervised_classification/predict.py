@@ -13,11 +13,12 @@ def predict(model_path, X_test_path, y_pred_path, y_pred_prob_path):
 
     if y_pred_prob_path != y_pred_path:
         y_pred_prob = model.predict_proba(X_test)
-        y_pred_prob_df = pd.DataFrame(
-            y_pred_prob,
-            columns=model.classes_,
+        positive_class_prob = y_pred_prob[:, 1]
+        y_pred_prob_series = pd.Series(
+            positive_class_prob,
+            name="predicted_built_age",
         )
-        y_pred_prob_df.to_csv(y_pred_prob_path, index=False)
+        y_pred_prob_series.to_csv(y_pred_prob_path, index=False)
 
 
 def pred_lda():
